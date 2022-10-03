@@ -1,0 +1,37 @@
+Recovery Time Objective (RTO)
+
+When the database becomes unavailable,  the following plan shall be initiated:
+note the time of the incident. That can be identified in CloudWatch logs/alarms or CloudTrail logs or email sent via SNS topic to the support staff
+assuming the on-call staff is using “following the sun” model and that the staff was alerted within 5 minutes of the incident happening (5 min):
+the staff member assigned to the incident logs in RDS management console (5min)
+Best case scenario: minimum time for the support staff member to receive alarm and login to the console is 10 minutes
+
+I. single AZ outage: 
+in addition to the first 3 points above:
+support staff member remediates the incident by using recovery point in time using the last available backup (20 min) 
+Therefore, minimum RTO for a single AZ outage is expected to be 30 min
+Note: some data may require manual recoverability from CloudTrail, CloudWatch and/or other application logs if available. This task may add another 30 min to complete recovery.    
+Total RTO for Single AZ: 1 hour
+
+II. Single region outage:
+After the support staff logged into RDS management console the following plan shall be initiated:
+staff promotes read-replica in the standby region as active database (+ 5 mins).
+Minimum RTO for a single region outage is expected to be 10 min but can vary depending on the database size.
+
+
+RPO
+I. single AZ outage: 
+Minimum RPO for a single AZ could be as fast  as 5 mins because RDS creates transactional log backups to S3 with 5 min intervals. However it can vary depending on the database size and whether the alarm was received as soon as the database went down right after latest backup completed. Therefore more reasonable RPO would be 15 mins. 
+
+See additional information in AWS Database blog:
+Amazon RDS Under the Hood: Single-AZ instance recovery
+https://aws.amazon.com/blogs/database/amazon-rds-under-the-hood-single-az-instance-recovery/
+
+II. Single region outage:
+Minimum RPO for a single region outage is expected to be 5 minutes as it has a better strategy to promote read-replica that restore data from a backup.
+However, read replica lag metric shall be taken into consideration. For this exercise a lag is not expected.
+
+See additional information in AWS Database blog:
+Implementing a disaster recovery strategy with Amazon RDS
+https://aws.amazon.com/blogs/database/implementing-a-disaster-recovery-strategy-with-amazon-rds/
+
